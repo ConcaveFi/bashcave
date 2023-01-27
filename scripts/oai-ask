@@ -5,6 +5,7 @@
 # * This script will ask in a simple fashion thing to open ai.
 # * You cannot submit multi lines of code, but it accept large sentences.
 # * Open ai can reply with code example or organised text.
+# * Your Q/A will be written inside your home directory openai.log
 # *
 # * add one or more api key on line 28 inside secret_key_array
 # *
@@ -42,13 +43,13 @@ gptChat() {
     if [ ${#RESPONSE} -gt 120 ]; then
         RESP=$(perl -pe 's/^"\\n//; s/\"$//; s/\\n//g' <<<$RESPONSE)
         echo -e "\n[\033[38;5;201mOPEN\033[0m\033[38;5;118mAI\033[0m] \n$RESP"
-        echo "[$(TZ="GMT" date +"%Y%m%d%H%M%S") ME] $@" >>$SCRIPTS/openai.log
-        echo "[OPENAI] \n\t$RESP\n" >>$SCRIPTS/openai.log
+        echo "[$(TZ="GMT" date +"%Y%m%d%H%M%S") ME] $@" >>$HOME/openai.log
+        echo "[OPENAI] \n\t$RESP\n" >>$HOME/openai.log
     else
         RESP=$(perl -pe 's/^"\\n//; s/\"$//; s/\\n//g' <<<$RESPONSE)
         echo -e "\n[\033[38;5;201mOPEN\033[0m\033[38;5;118mAI\033[0m] $RESP"
-        echo "[$(TZ="GMT" date +"%Y%m%d%H%M%S") ME] $@" >>$SCRIPTS/openai.log
-        echo "[OPENAI] $RESP\n" >>$SCRIPTS/openai.log
+        echo "[$(TZ="GMT" date +"%Y%m%d%H%M%S") ME] $@" >>$HOME/openai.log
+        echo "[OPENAI] $RESP\n" >>$HOME/openai.log
     fi
 }
 
