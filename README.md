@@ -28,10 +28,7 @@ export PATH=$PATH:/path/to/my_script_folder
 
 ## Usage
 
-All bash scripts inside the foler `scripts` do not need to be edited.
-Other folder myght need you to edite then to enter your api key.
-Most of the script will require your to have at least `curl` installed but also `jq`.
-If some script need it they will check if that cli-tool exist on your machine first.
+All bash scripts inside the folder `scripts/` do not need to be edited. Other folders may require you to edit them to enter your API key. Most of the scripts will require you to have at least`curl` installed, but some may also require `jq`. If a script needs it, it will check if that CLI tool exists on your machine first.
 
 ```sh
 sudo apt install curl jq
