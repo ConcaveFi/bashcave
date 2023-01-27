@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# * Custom open ai bash script
+# *
+# * This script will ask in a simple fashion thing to open ai.
+# * You cannot submit multi lines of code, but it accept large sentences.
+# * Open ai can reply with code example or organised text.
+# *
+# * add one or more api key on line 28 inside secret_key_array
+# *
+# * USAGE need at least one argument: oai say hello in slang american from Palo Alto
+
+[[ -z $1 ]] && {
+    echo "usage: Open Ai GPT-3 ask something"
+    exit 1
+}
+type jq &>/dev/null || {
+    echo "jq is not installed. Please install it before running this script."
+    exit 1
+}
+
+# source $HOME/.env
+API_ENDPOINT="https://api.openai.com/v1/completions"
+MODEL=text-davinci-003
+MAX_TOKEN=1500
+TEMPERATURE=0
+day_of_week=$(date +%u)
+
+secret_key_array=($oai_api_key_1_ $oai_api_key_2_ $oai_api_key_3_ $oai_api_key_4_)
+random_apikey() {
+    local secret_key_array=("$@")
+    echo "$(echo "${secret_key_array[@]}" | tr ' ' '\n' | shuf -n1)"
+}
+secret_key_=$(random_apikey "${secret_key_array[@]}")
+
+RESPONSE=$(curl --silent -w "%{http_code}" -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $secret_key_" -d "{\"model\": \"$MODEL\", \"prompt\": \"$@\", \"max_tokens\": $MAX_TOKEN, \"temperature\": $TEMPERATURE}" $API_ENDPOINT)
+HTTP_CODE="${RESPONSE: -3}"
+RESPONSE="${RESPONSE:0:${#RESPONSE}-4}"
+RESPONSE="$(echo $RESPONSE | jq -r '.choices[].text')"
+
+gptChat() {
+    if [ ${#RESPONSE} -gt 120 ]; then
+        RESP=$(perl -pe 's/^"\\n//; s/\"$//; s/\\n//g' <<<$RESPONSE)
+        echo -e "\n[\033[38;5;201mOPEN\033[0m\033[38;5;118mAI\033[0m] \n$RESP"
+        echo "[$(TZ="GMT" date +"%Y%m%d%H%M%S") ME] $@" >>$SCRIPTS/openai.log
+        echo "[OPENAI] \n\t$RESP\n" >>$SCRIPTS/openai.log
+    else
+        RESP=$(perl -pe 's/^"\\n//; s/\"$//; s/\\n//g' <<<$RESPONSE)
+        echo -e "\n[\033[38;5;201mOPEN\033[0m\033[38;5;118mAI\033[0m] $RESP"
+        echo "[$(TZ="GMT" date +"%Y%m%d%H%M%S") ME] $@" >>$SCRIPTS/openai.log
+        echo "[OPENAI] $RESP\n" >>$SCRIPTS/openai.log
+    fi
+}
+
+if [ "$HTTP_CODE" != "200" ]; then
+    echo -e "Will try with an other api key in 3sec..."
+    sleep 3
+    secret_key_=$(random_apikey "${secret_key_array[@]}")
+    gptChat
+fi
+
+if [ "$HTTP_CODE" == "200" ]; then
+    gptChat
+fi

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+# * Easy sharing discord timezoned time
+# *
+# * This script will display the tag to add inside the chat box for a time
+# *
+# * USAGE no need argument: discordtime (then follow the prompt)
+
+# Prompt the user
+echo -n "Enter the year (YYYY): "
+read YYYY_loc
+echo -n "Enter the month (MM): "
+read MM_loc
+echo -n "Enter the day (DD): "
+read DD_loc
+echo -n "Enter the hour (HH): "
+read HH_loc
+echo -n "Enter the minute (MM): "
+read mm_loc
+
+local_time=$(date +"$YYYY_loc-$MM_loc-$DD_loc $HH_loc:$mm_loc")
+# echo "Local time: $local_time"
+
+local_timestamp=$(date -d "$local_time" +%s)
+gmt_timestamp=$(TZ='GMT' date -d "$local_time" +%s)
+time_diff=$((gmt_timestamp - local_timestamp))
+new_gmt_timestamp=$((local_timestamp - time_diff))
+gmt_time=$(date -d "1970-01-01 UTC $new_gmt_timestamp seconds" +"%Y-%m-%d %H:%M")
+# echo "GMT time: $gmt_time"
+
+YYYY_gmt=$(date -d "$gmt_time" '+%Y')
+MM_gmt=$(date -d "$gmt_time" '+%m')
+DD_gmt=$(date -d "$gmt_time" '+%d')
+HH_gmt=$(date -d "$gmt_time" '+%H')
+mm_gmt=$(date -d "$gmt_time" '+%M')
+
+epoch=$(date -d "$YYYY_gmt-$MM_gmt-$DD_gmt $HH_gmt:$mm_gmt:00 +0000" +"%s")
+epoch_to_date=$(date -d @$epoch +%Y%m%d_%H%M%S)
+
+echo "Discord time tag for your local time $local_time event copy this inside your chat box"
+echo "<t:$epoch:F>"

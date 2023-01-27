@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+# * Add SPDX lines on your code
+# *
+# * This script will add 2 SPDX lines at the beging of your code
+# * the first line is the name or your parent directory followed by Copyright
+# * the second line is the SPDX declared at line 23
+# *
+# * USAGE need at least one argument: spdx my_code.js path/my_other_code.js
+
+if [[ $# -eq 0 ]]; then
+  echo "Usage: add 1 or more file or path/file from root dir to add SPDX"
+  echo "Run this script at the root directory of your git project"
+  exit 1
+fi
+
+if [ ! -d .git ]; then
+  echo "Error: Not a git repository."
+  echo "Run this script at the root directory of your git project"
+  exit 1
+fi
+
+YYYY=$(date +%Y)
+COPYRIGHTS_DIR=$(echo "${PWD%/*}" | perl -pe 's/^.*\/(\s)*//')
+LICENSE_ID="Apache-2.0"
+
+for file in "$@"; do
+  if lsof -a -c "$EDITOR" -d DEL | grep -q "$file"; then
+    echo "Error: $file is currently being edited by $EDITOR. Please save the file before running this script."
+    continue
+  else
+    if grep -q "SPDX-License-Identifier" "$file"; then
+      echo "Error: $file already contains an SPDX license identifier. Skipping file."
+      continue
+    else
+      TEMP_DIR=$(mktemp -d -t foobar.XXXXX)
+      if [ "${file%/*}" != "$file" ]; then
+        mkdir -p "$TEMP_DIR/${file%/*}"
+      fi
+      touch "$TEMP_DIR/$file"
+      cat <(printf "// Copyright %4s %s\n// SPDX-License-Identifier: %s\n\n" "$YYYY" "$COPYRIGHTS_DIR" "$LICENSE_ID") "$file" >>"$TEMP_DIR/$file"
+      mv "$TEMP_DIR/$file" "$file"
+      echo "Added SPDX-License-Identifier: ${LICENSE_ID} to $file"
+    fi
+  fi
+done

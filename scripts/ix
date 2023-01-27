@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# * Easy sharing file from terminal
+# *
+# * This script will cat a file and send it to ix.io
+# * you will have a sharable link of that file
+# *
+# * USAGE need only one argument: xi path_to_your/file
+
+if [ -z "$1" ]; then
+  echo "First argument should be the path to a file,"
+  echo "that you want to share on http://ix.io"
+fi
+
+cat $1 | curl -F 'f:1=<-' ix.io
