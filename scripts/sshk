@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+    echo "Usage: arg for your ssh key_name [key_name].ed25519_USER"
+fi
+
+ssh-keygen -t ed25519 -f ~/.ssh/"$1".ed25519_$USER -C "$USER@concave.lol"
+ls -la ~/.ssh/
+echo "Do you need to: ssh-add ~/.ssh/"$1".ed25519_"$USER".pub"

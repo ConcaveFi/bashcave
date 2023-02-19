@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# * Easy grab abi from etherscan
+# *
+# * First export your ETHERSCAN_API_KEY
+# * Use this script with contract address and option chain name
+# * eg for mainnet default : getabi 0x12345
+# * eg for arbitrum default : getabi 0x12345 arbitrum
+
+[[ -z $1 ]] && {
+  echo "usage: 1st arg = Give contract address as argument."
+  echo "usage: 2nd arg(optional) = name the blockchain. (default empty for mainnet)"
+  exit 1
+}
+type jq &>/dev/null || {
+  echo "jq is not installed. Please install it before running this script."
+  exit 1
+}
+
+if echo "$1" | grep -Eq '^0x[0-9a-fA-F]{40}$'; then
+  echo "Valid contract address"
+else
+  echo "Invalid contract address"
+  exit 1
+fi
+
+ETHERSCAN_URL="https://api$2.etherscan.io/api?module=contract&action=getsourcecode&address=$1&apikey=$ETHERSCAN_API_KEY"
+RES=$(curl -s "$ETHERSCAN_URL")
+RESPONSE=$(echo "$RES" | jq '.result[0]')
+SM_IS_A_PROXY=$(echo "$RESPONSE" | jq -r '.Proxy')
+SM_NAME=$(echo "$RESPONSE" | jq -r '.ContractName')
+SM_ABI=$(echo "$RESPONSE" | jq -r '.ABI')
+
+# Check if the contract is a proxy and if so go get the implementation abi
+if [ ${#SM_IS_A_PROXY} -gt 0 ]; then
+  SM_IMPLEMENTATION="$(echo $RESPONSE | jq -r '.Implementation')"
+  ETHERSCAN_URL="https://api$2.etherscan.io/api?module=contract&action=getsourcecode&address=$SM_IMPLEMENTATION&apikey=$ETHERSCAN_API_KEY"
+  RES=$(curl -s "$ETHERSCAN_URL")
+  RESPONSE=$(echo "$RES" | jq '.result[0]')
+  SM_NAME=$(echo "$RESPONSE" | jq -r '.ContractName')
+  SM_ABI=$(echo "$RESPONSE" | jq -r '.ABI')
+  echo "$SM_ABI" >"$SM_NAME.abi"
+else
+  echo "$SM_ABI" >"$SM_NAME.abi"
+fi
+echo "writing $SM_NAME.abi"
+ls -l "$PWD/$SM_NAME.abi"
